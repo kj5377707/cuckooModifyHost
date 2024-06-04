@@ -29,7 +29,7 @@ from cuckoo.misc import cwd
 log = logging.getLogger(__name__)
 db = Database()
 
-def analyzer_zipfile(platform, monitor):
+def analyzer_zipfile(platform, monitor, monType):
     """Create the zip file that is sent to the Guest."""
     t = time.time()
 
@@ -65,7 +65,7 @@ def analyzer_zipfile(platform, monitor):
         if os.path.isfile(dirpath):
             monitor = os.path.basename(open(dirpath, "rb").read().strip())
             dirpath = cwd("monitor", monitor)
-
+            dirpath = dirpath[:-40] + monType
         for name in os.listdir(dirpath):
             zip_file.write(
                 os.path.join(dirpath, name), os.path.join("bin", name)
@@ -387,9 +387,9 @@ class GuestManager(object):
             return self.environ["TEMP"]
         return "/tmp"
 
-    def upload_analyzer(self, monitor):
+    def upload_analyzer(self, monitor, monType):
         """Upload the analyzer to the Virtual Machine."""
-        zip_data = analyzer_zipfile(self.platform, monitor)
+        zip_data = analyzer_zipfile(self.platform, monitor, monType)
 
         log.debug(
             "Uploading analyzer to guest (id=%s, ip=%s, monitor=%s, size=%d)",
@@ -419,7 +419,7 @@ class GuestManager(object):
         }
         self.post("/store", files={"file": "\n".join(config)}, data=data)
 
-    def start_analysis(self, options, monitor):
+    def start_analysis(self, options, monitor, monType):
         """Start the analysis by uploading all required files.
 
         @param options: the task options
@@ -491,7 +491,7 @@ class GuestManager(object):
         self.query_environ()
 
         # Upload the analyzer.
-        self.upload_analyzer(monitor)
+        self.upload_analyzer(monitor, monType)
 
         # Pass along the analysis.conf file.
         self.add_config(options)

@@ -214,7 +214,7 @@ def cuckoo_init(level, ctx, cfg=None):
         )
         log.info("$ %s", green(format_command("community")))
 
-def cuckoo_main(max_analysis_count=0):
+def cuckoo_main(monitor, max_analysis_count=0):
     """Cuckoo main loop.
     @param max_analysis_count: kill cuckoo after this number of analyses
     """
@@ -240,7 +240,7 @@ def cuckoo_main(max_analysis_count=0):
     try:
         rs = ResultServer()
         sched = Scheduler(max_analysis_count)
-        sched.start()
+        sched.start(monitor)
     except KeyboardInterrupt:
         log.info("CTRL+C detected! Stopping.. This can take a few seconds")
     finally:
@@ -248,6 +248,10 @@ def cuckoo_main(max_analysis_count=0):
             stop()
 
 @click.group(invoke_without_command=True)
+@click.argument(
+    "--monitor",
+    type=click.Choice(["veh", "iat", "eat"], case_sensitive=False)
+)
 @click.option("-d", "--debug", is_flag=True, help="Enable verbose logging")
 @click.option("-q", "--quiet", is_flag=True, help="Only log warnings and critical messages")
 @click.option("--nolog", is_flag=True, help="Don't log to file.")
@@ -256,7 +260,7 @@ def cuckoo_main(max_analysis_count=0):
 @click.option("--user", help="Drop privileges to this user")
 @click.option("--cwd", help="Cuckoo Working Directory")
 @click.pass_context
-def main(ctx, debug, quiet, nolog, maxcount, ignore_vuln, user, cwd):
+def main(ctx, debug, quiet, nolog, maxcount, ignore_vuln, user, cwd, monitor):
     """Invoke the Cuckoo daemon or one of its subcommands.
 
     To be able to use different Cuckoo configurations on the same machine with
@@ -295,7 +299,7 @@ def main(ctx, debug, quiet, nolog, maxcount, ignore_vuln, user, cwd):
 
     try:
         cuckoo_init(level, ctx)
-        cuckoo_main(maxcount)
+        cuckoo_main(maxcount, monitor)
     except CuckooCriticalError as e:
         log.critical(red("{0}: {1}".format(e.__class__.__name__, e)))
         sys.exit(1)

@@ -47,7 +47,7 @@ class AnalysisManager(threading.Thread):
     complete the analysis and store, process and report its results.
     """
 
-    def __init__(self, task_id, error_queue):
+    def __init__(self, task_id, error_queue, monitor):
         """@param task: task object containing the details for the analysis."""
         threading.Thread.__init__(self)
 
@@ -66,6 +66,7 @@ class AnalysisManager(threading.Thread):
         self.unrouted_network = False
         self.stopped_aux = False
         self.rs_port = config("cuckoo:resultserver:port")
+        self.monitor = monitor
 
     def init(self):
         """Initialize the analysis."""
@@ -401,7 +402,7 @@ class AnalysisManager(threading.Thread):
             # Start the analysis.
             self.db.guest_set_status(self.task.id, "starting")
             monitor = self.task.options.get("monitor", "latest")
-            self.guest_manager.start_analysis(options, monitor)
+            self.guest_manager.start_analysis(options, monitor, self.monitor)
 
             # In case the Agent didn't respond and we force-quit the analysis
             # at some point while it was still starting the analysis the state
@@ -965,7 +966,7 @@ class Scheduler(object):
                 cleaned.add(am)
         return cleaned
 
-    def start(self):
+    def start(self, monitor):
         """Start scheduler."""
         self.initialize()
 
@@ -1090,7 +1091,7 @@ class Scheduler(object):
                 self.total_analysis_count += 1
 
                 # Initialize and start the analysis manager.
-                analysis = AnalysisManager(task.id, errors)
+                analysis = AnalysisManager(task.id, errors, monitor)
                 analysis.daemon = True
                 analysis.start()
                 self.analysis_managers.add(analysis)
