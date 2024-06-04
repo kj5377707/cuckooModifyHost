@@ -6,6 +6,12 @@
 or pull requests will most likely not be processed, as a current full rewrite
 of Cuckoo is undergoing and will be announced soon.**
 
+**This is the modified version of cuckoo host.**
+usage : (1)compile IAT/EAT/VEH version of monitor
+        (2)create folder named iat/eat/veh in .cuckoo/monitor/ and copy all file from "lastest" (depend on your cuckoo's version) (remember to change your monitor.dll)
+        (3)when using cuckoo, you have to specify your monitor version (--monitor "version name")
+notice : new monitor only test on 32bytes version, 64bytes could work but I didn't test it. 
+
 `Cuckoo Sandbox <https://cuckoosandbox.org/>`_ is the leading open source
 automated malware analysis system.
 
